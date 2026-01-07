@@ -20,17 +20,27 @@ sleep 10
 echo "Creating index pattern..."
 
 # Create index pattern
-curl -X POST "$KIBANA_URL/api/saved_objects/index-pattern/iot-logs" \
+HTTP_CODE=$(curl -X POST "$KIBANA_URL/api/saved_objects/index-pattern/iot-logs" \
   -H "kbn-xsrf: true" \
   -H "Content-Type: application/json" \
+  -w "%{http_code}" \
+  -o /tmp/kibana_response.json \
   -d '{
     "attributes": {
       "title": "iot-logs-*",
       "timeFieldName": "@timestamp"
     }
-  }'
+  }')
 
-echo -e "\n\nIndex pattern created!"
+if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
+    echo -e "\n\nIndex pattern created successfully!"
+elif [ "$HTTP_CODE" -eq 409 ]; then
+    echo -e "\n\nIndex pattern already exists!"
+else
+    echo -e "\n\nError creating index pattern (HTTP $HTTP_CODE):"
+    cat /tmp/kibana_response.json
+    echo ""
+fi
 
 echo -e "\nKibana is ready at: $KIBANA_URL"
 echo "Elasticsearch is ready at: $ELASTICSEARCH_URL"

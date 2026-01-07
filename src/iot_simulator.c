@@ -109,7 +109,8 @@ int main() {
     }
     
     printf("Logging to: %s\n", log_path);
-    printf("Starting data generation...\n\n");
+    printf("Starting data generation...\n");
+    printf("Press Ctrl+C to stop\n\n");
     
     // Main loop - generate data continuously
     while (1) {
@@ -129,6 +130,9 @@ int main() {
         sleep(config.interval_seconds);
     }
     
-    fclose(log_file);
-    return 0;
+    // Note: This code is unreachable due to infinite loop above
+    // In a real application, you would handle signals (SIGINT, SIGTERM) to break the loop
+    // and close resources properly
+    // fclose(log_file);
+    // return 0;
 }
