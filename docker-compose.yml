@@ -1,0 +1,157 @@
+services:
+  # Hadoop NameNode
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+      - ./logs:/logs
+    environment:
+      - CLUSTER_NAME=iot_cluster
+    env_file:
+      - ./config/hadoop.env
+    networks:
+      - iot_network
+
+  # Hadoop DataNode
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    restart: always
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+      - ./logs:/logs
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./config/hadoop.env
+    networks:
+      - iot_network
+    depends_on:
+      - namenode
+
+  # Hive Server
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    restart: always
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    volumes:
+      - ./hive:/hive_custom_scripts
+      - ./logs:/logs
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    env_file:
+      - ./config/hadoop.env
+    networks:
+      - iot_network
+    depends_on:
+      - hive-metastore
+      - namenode
+
+  # Hive Metastore
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    restart: always
+    ports:
+      - "9083:9083"
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 hive-metastore-postgresql:5432"
+    env_file:
+      - ./config/hadoop.env
+    networks:
+      - iot_network
+    depends_on:
+      - hive-metastore-postgresql
+
+  # PostgreSQL for Hive Metastore
+  hive-metastore-postgresql:
+    image: bde2020/hive-metastore-postgresql:2.3.0
+    container_name: hive-metastore-postgresql
+    restart: always
+    volumes:
+      - hive_postgresql:/var/lib/postgresql/data
+    networks:
+      - iot_network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - iot_network
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    restart: always
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    volumes:
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logs:/logs
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    networks:
+      - iot_network
+    depends_on:
+      - elasticsearch
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - iot_network
+    depends_on:
+      - elasticsearch
+
+  # IoT Simulator
+  iot-simulator:
+    build: .
+    container_name: iot-simulator
+    restart: always
+    volumes:
+      - ./logs:/logs
+    environment:
+      - DEVICE_COUNT=10
+      - INTERVAL_SECONDS=10
+    networks:
+      - iot_network
+
+networks:
+  iot_network:
+    driver: bridge
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hive_postgresql:
+  elasticsearch_data:
