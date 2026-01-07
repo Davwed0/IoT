@@ -58,7 +58,7 @@ cd IoT
 ### 2. Start the Environment
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This will:
@@ -69,7 +69,7 @@ This will:
 ### 3. Check Service Status
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 All services should show as "Up" or "healthy".
@@ -78,10 +78,10 @@ All services should show as "Up" or "healthy".
 
 ```bash
 # View IoT simulator logs
-docker-compose logs -f iot-simulator
+docker compose logs -f iot-simulator
 
 # View Logstash processing
-docker-compose logs -f logstash
+docker compose logs -f logstash
 
 # Check generated log files
 tail -f logs/iot_logs.json
@@ -279,20 +279,20 @@ docker system df
 
 ```bash
 # Check logs
-docker-compose logs
+docker compose logs
 
 # Restart specific service
-docker-compose restart <service-name>
+docker compose restart <service-name>
 
 # Rebuild and restart
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### No Logs Generated
 
 ```bash
 # Check IoT simulator
-docker-compose logs iot-simulator
+docker compose logs iot-simulator
 
 # Verify logs directory
 ls -la logs/
@@ -305,11 +305,11 @@ chmod 777 logs/
 
 ```bash
 # Wait for services to be ready
-docker-compose logs hive-metastore
-docker-compose logs hive-metastore-postgresql
+docker compose logs hive-metastore
+docker compose logs hive-metastore-postgresql
 
 # Restart Hive services
-docker-compose restart hive-metastore hive-server
+docker compose restart hive-metastore hive-server
 ```
 
 ### Elasticsearch Issues
@@ -329,10 +329,10 @@ curl -X DELETE "localhost:9200/iot-logs-*"
 
 ```bash
 # Stop all services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (WARNING: deletes all data)
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Data Persistence
@@ -372,7 +372,7 @@ environment:
   - INTERVAL_SECONDS=5
 
 # Restart simulator
-docker-compose restart iot-simulator
+docker compose restart iot-simulator
 ```
 
 ### Add More DataNodes

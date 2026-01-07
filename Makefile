@@ -12,10 +12,10 @@ help:
 	@echo "  make test     - Run basic health checks"
 
 build:
-	docker-compose build
+	docker compose build
 
 up:
-	docker-compose up -d
+	docker compose up -d
 	@echo "Waiting for services to start..."
 	@sleep 10
 	@echo "Services started. Access points:"
@@ -25,19 +25,19 @@ up:
 	@echo "  - Hive Server: localhost:10000"
 
 down:
-	docker-compose down
+	docker compose down
 
 restart:
-	docker-compose restart
+	docker compose restart
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 status:
-	docker-compose ps
+	docker compose ps
 
 clean:
-	docker-compose down -v
+	docker compose down -v
 	rm -f logs/iot_logs.json
 
 test:
@@ -51,4 +51,4 @@ test:
 	@echo "\n4. Checking log generation..."
 	@test -f logs/iot_logs.json && echo "Logs: Generated" || echo "Logs: Not yet generated"
 	@echo "\n5. Checking IoT Simulator..."
-	@docker-compose logs --tail=5 iot-simulator
+	@docker compose logs --tail=5 iot-simulator
